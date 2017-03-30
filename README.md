@@ -1,2 +1,141 @@
 # symfony_recipes
-Я буду писать здесь рецепты для Symfony на русском
+### Я буду писать здесь рецепты для Symfony на русском
+Symfony практически не использует функций ядра, для всего есть свой сервис. Вы можете убедится в этом используя 
+```php
+php bin/console debug/container log 
+```
+
+или просто посмотреть, как работает тот же метод render. 
+Который на самом деле вызывает сервис **tempating** со всеми последующими методами этого сервиса, и по сути возвращает тот же html документ.
+
+-------
+```php
+doctrine:schema:update —force
+```
+поможет создать таблицу на основе объекта. Также редактируя объект можно добавлять поля в таблицу. Но лучшим способом являются миграции, которые работаю в symfony просто восхитительно. 
+Редактируешь объект, после чего для генерации миграции запускаешь 
+```php
+doctrine:migrations:diff
+```
+и генерируется sql запрос, который редактирует таблицу путем запуска с консоли 
+```php
+doctrine:migrations:migrate.
+```
+-----
+Для создании ложных данных в symfony используются **fixtures** и лучше использовать >**nelmio/alice**, написанную видимо **saldaek**, и использующая faker. Очень удобно и подробная документация. 
+Также в symfony очень просто можно создать свои запросы, для этого нужно создать репозиторий под нужную сущность и добавить туда кастомный сложный запрос, хорошо его описав, используя query builder.
+
+-----
+
+Многие ко многим в symfony работаю чудеснейшим образом. 
+
+Пример кода:
+```php
+class User
+{
+/**
+* Many Users have Many Groups.
+* @ORM\ManyToMany(targetEntity="Group", inversedBy="users")
+* @ORM\JoinTable(name="roles_users")
+*/
+private $roles;
+
+public function __construct() {
+$this->roles = new ArrayCollection();
+}
+============================
+class Role
+{
+/**
+* Many Roles have Many Users.
+* @ORM\ManyToMany(targetEntity="User", mappedBy="roles")
+*/
+private $users;
+
+public function __construct() {
+$this->users = new ArrayCollection();
+}
+```
+Использование:
+```php
+<li><a>Количество ролей <span class="pull-right badge bg-blue">{{ user.roles.count }}</span></a></li>
+```
+Считаем количество ролей конкретного пользователя. Roles мы получаем **Persistentcollection** которая имеет методы стандартного итератора и методы для работы с коллекциями, в общем все что душе угодно, любые манипуляции.
+
+
+------
+
+Для работы с Symfony идеально использовать **phpstorm**. К нему есть несколько отличных плагинов 
+
+#####(symfony plugin и php annotations) 
+
+которые откроют все возможности для быстрого доступа к методам и свойствам. А названия настолько понятны, что в документацию лезть не приходится.
+
+------
+
+При связях, Symfony возвращает объект **ArrayCollection** который имеет в себе множество методов. Например метод filter.
+```php
+$recentNotes = $genus->getNotes()->filter(function (GenusNote $note){
+return $note->getCreatedAt() > new \DateTime('-3 month');
+});
+```
+На этом примере мы фильтруем записи по определенному отрезку времени (последние три месяца). На этом магия ArrayCollection не заканчивается.
+
+-------
+
+Создавать сервисы в symfony очень просто. Создаем свой сервис в папке service. При необходимости мы можем добавлять уже существующие сервисы в помощь нашему. Используем **Dependency Injection** и передаем сервисы в конструктор, нужные для сервисов классы можно найти с помощью консольной команды php bin/console debug:container "имя сервиса". После чего регистрируем наш сервис в symfony в конфиге **services.yml**.
+Пример:
+```yml
+services:
+app.markdown_transformer:
+class: AppBundle\Service\MarkdownTransformer
+arguments: ['@markdown.parser', '@doctrine_cache.providers.my_markdown_cache']
+```
+И теперь используем его:
+```php
+$transformer = $this->get('app.markdown_transformer');
+
+```
+Наш сервис готов.
+
+
+------
+
+Также есть возможность написать сервис для шаблонизатора twig. Для этого создадим папку twig в AppBundle и создадим наше расширение, унаследуем его от **Twig_Extension**, и реализуем методы **getFilters()**
+```php
+return [
+new \Twig_SimpleFilter('markdownify', [$this, 'parseMarkdown'])
+];
+```
+
+где первый аргумент название нашего фильтра, а второй метод по которому он будет работать, фильтровать.
+Также регистрируем его как twig сервис 
+```php
+app.markdown_extension:
+class: AppBundle\Twig\MarkdownExtension
+tags:
+- { name: twig.extension}
+arguments: ['@app.markdown_transformer']
+
+```
+Теперь наш сервис можно использовать **{{string|markdownify}}**
+
+Можно использовать сервис из прошлого примера и реализовать метод parseMarkdown так:
+```php
+return $this->markdownTransformer->parse($str);
+```
+Использовав **dependencyInjection**. Кстати symfony творит чудеса, нам не нужно нигде создавать объект, мы все уже прописали в .yml массив arguments это и есть наш сервис который будет передан в качестве зависимости.
+
+------
+macro в Symfony.
+
+Macro это нечто вроде include, только используешь twig и можно передавать параметры. Массивы, объекты, что угодно. В macro принимаем параметры, прописываем логику шаблона.
+Вот пример сложного **macro**:
+```php
+{{ forms.multilang(
+['Заголовок страницы', 'Мета-теги', 'Содержание страницы'],
+{'title': 'input', 'meta': 'input', 'text': 'text'},
+[page.title, page.meta, page.text]
+) }}
+
+```
