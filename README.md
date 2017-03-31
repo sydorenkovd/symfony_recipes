@@ -149,14 +149,14 @@ Macro это нечто вроде include, только используешь 
                     <a class="margin-custom" href="#Language_ru" data-toggle="tab" data-lang="ru">
                         <label class="icheckbox_minimal-blue">
                             <div class="icheckbox_minimal-blue checked" aria-checked="false" aria-disabled="false" style="position: relative;">
-                                <input id="langs[ru]" type="checkbox" class="minimal languageCheckBox" autocomplete="off" data-lang="ru" checked="" name="langs[ru]" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
+                                <input id="langs[ru]" type="checkbox" class="minimal languageCheckBox" autocomplete="off" data-lang="ru" checked="" name="langs[ru]"></div>
                         </label>
                         <i class="famfamfam-flag-ru"></i> Русский                </a>
                 </li>
                 <li class="checked" id="LanguageTab_uk">
                     <a class="margin-custom" href="#Language_uk" data-toggle="tab" data-lang="uk">
                         <label class="icheckbox_minimal-blue">
-                            <div class="icheckbox_minimal-blue checked" aria-checked="false" aria-disabled="false" style="position: relative;"><input id="langs[uk]" type="checkbox" class="minimal languageCheckBox" autocomplete="off" data-lang="uk" checked="" name="langs[uk]" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
+                            <div class="icheckbox_minimal-blue checked" aria-checked="false" aria-disabled="false" style="position: relative;"><input id="langs[uk]" type="checkbox" class="minimal languageCheckBox" autocomplete="off" data-lang="uk" checked="" name="langs[uk]"></div>
                         </label>
                         <i class="famfamfam-flag-ua"></i> Українська                </a>
                 </li>
