@@ -139,3 +139,47 @@ Macro это нечто вроде include, только используешь 
 ) }}
 
 ```
+
+```twig
+{% macro multilang(label, field, value) %}
+    <div class="box-body">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="checked active" id="LanguageTab_ru">
+                    <a class="margin-custom" href="#Language_ru" data-toggle="tab" data-lang="ru">
+                        <label class="icheckbox_minimal-blue">
+                            <div class="icheckbox_minimal-blue checked" aria-checked="false" aria-disabled="false" style="position: relative;">
+                                <input id="langs[ru]" type="checkbox" class="minimal languageCheckBox" autocomplete="off" data-lang="ru" checked="" name="langs[ru]" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
+                        </label>
+                        <i class="famfamfam-flag-ru"></i> Русский                </a>
+                </li>
+                <li class="checked" id="LanguageTab_uk">
+                    <a class="margin-custom" href="#Language_uk" data-toggle="tab" data-lang="uk">
+                        <label class="icheckbox_minimal-blue">
+                            <div class="icheckbox_minimal-blue checked" aria-checked="false" aria-disabled="false" style="position: relative;"><input id="langs[uk]" type="checkbox" class="minimal languageCheckBox" autocomplete="off" data-lang="uk" checked="" name="langs[uk]" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
+                        </label>
+                        <i class="famfamfam-flag-ua"></i> Українська                </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="Language_ru">
+                    <input type="hidden" ng-model="$formGet.langs.ru" ng-init-value="Русский">
+                    <div class="form-group">
+                        <label for="html">{{ label }}</label>
+                        <div ng-model="$formGet.{{ field }}.ru" text-angular="" ng-init="$formGet.{{ field }}.ru = '{{ value.ru|escape|raw }}'"></div>
+                    </div>
+                </div>
+                <div class="tab-pane " id="Language_uk">
+                    <input type="hidden" ng-model="$formGet.langs.uk" ng-init-value="Українська">
+                    <div class="form-group">
+                        <label for="html">{{ label }}</label>
+                        <div ng-model="$formGet.{{ field }}.uk" text-angular="" ng-init="$formGet.{{ field }}.uk = '{{ value.uk|escape|raw }}'"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endmacro %}
+```
+Этот macro отрисовывает поля для редактирования текстов в двух языковых фарматах.
+К сожалению twig не поддерживает парсинг значений в шаблоне, как это умеет php, но зато мы более наглядно описываем, что нам нужно и также гибко можем это изменять.
