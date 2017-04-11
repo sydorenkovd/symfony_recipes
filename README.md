@@ -415,17 +415,18 @@ $data = $this->getDataArrayFromRequest($request);
                 $this->save($model);
             }
     }
+    
 ```
 
 Этот метод у меня определен в базовом контроллере от которого наследуются все контроллеры, которые хотят получить методы-шаблоны. Что здесь происходит?
 Для начала мы передаем полное имя модели, сам массив изображений, имя основной модели и идентификатор основной модели.
 
 
-     * We get lastId, and save image with name of last id
-     * if everything doing well we create new Entity Image
-     * And after all we create Extra Entities those connect Image and MainTable, MainTableImage for instance
-     * and we are setting id of image and main id
-     
+ * We get lastId, and save image with name of last id
+ * if everything doing well we create new Entity Image
+ * And after all we create Extra Entities those connect Image and MainTable, MainTableImage for instance
+ * and we are setting id of image and main id
+-----
  Мы имеем таблицу всех изображений, где храним идентификаторы. Основную таблицу к которой относится "галерея", и промежуточную таблицу. Где связываем идентификаторы изображений с основной таблицей. Стандартные многие ко многим. Но мне нужно немного больше гибкости, по этому я не использвал такой тип связи.
  
  Основная идея здесь, то php может парсить переменные как методы. Мы можем очень динамично работать с переменными и значит использовать один код много раз, меняя только регуляторы, которые в него передаем.
