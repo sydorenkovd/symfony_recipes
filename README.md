@@ -398,3 +398,24 @@ $data = $this->getDataArrayFromRequest($request);
 
 Но идея топика в другом. Вернемся к сохранению изображений.
 
+```php
+
+ public function saveImages($modelName, $images, $mainModelName, $mainModelId)
+    {
+            foreach ($images as $image) {
+                $imageId = $this->getDoctrine()->getRepository('Model:Image')->getLastId();
+                $saved = $this->get('app.image')->addNewImageBase64($image, $imageId);
+                if($saved) { $this->save(new Image()); }
+                $model = new $modelName();
+                $imageModel = $this->getDoctrine()->getRepository('Model:Image')->find($imageId);
+                $mainModel = $this->getDoctrine()->getRepository('Model:'.$mainModelName)->find($mainModelId);
+                $model->setImage($imageModel);
+                $key = 'set' . $mainModelName;
+                $model->$key($mainModel);
+                $this->save($model);
+            }
+    }
+```
+
+Этот метод у меня определен в базовом контроллере от которого наследуются все контроллеры, которые хотят получить методы-шаблоны. Что здесь происходит?
+Для начала мы передаем полное имя модели, сам массив изображений, имя основной модели и идентификатор основной модели.
