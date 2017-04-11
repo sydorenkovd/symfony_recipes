@@ -377,3 +377,24 @@ Admin.directive('tableAdmin', ["$", "$compile", function($, $compile) {
 На самом деле этот процес занимает довольно таки много времени и кода. Руководствуясь моим любимым принципом DRY я попробую минифицировать количество строк которое нам необходимо при сохранении нескольких изображении.
 
 Передавать изображения с клиента на сервер мы будем по средством base64 кода. Это удобно и просто.
+Будем передавать такого вида json:
+![пример](https://github.com/sydorenkovd/symfony_recipes/blob/master/assets/64base.png "base64")
+
+```php
+$data = $this->getDataArrayFromRequest($request);
+        if (isset($data['image'])) {
+            $this->saveImages('Model\Entity\OfficeImage', $data['image'], 'Office', $data['id']);
+        }
+```
+
+Метод который нас интересует **saveImages**, но вот вы заметили метод **getDataArrayFromRequest** он также шаблонизирован под нужды и превращает из json в удобный массив php контент который мы получаем по средством ajax запроса.
+
+```php
+ protected function getDataArrayFromRequest(Request $request)
+    {
+        return json_decode($request->getContent(), true);
+    }
+```
+
+Но идея топика в другом. Вернемся к сохранению изображений.
+
