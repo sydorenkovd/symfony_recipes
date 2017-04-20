@@ -459,3 +459,36 @@ $data = $this->getDataArrayFromRequest($request);
 ```
 
 Таким образом можно формировать постоянные элементы быстро и гибко.
+
+------------
+
+Быстрое сохранение данных в Symfony
+
+Вас как и меня наверное раздражает писать много кода в Symfony. Он многих отталкивает своей так называемо монструозностью. Но это не так. Тот же самый CRUD на Symfony пишется очень легко, просто и быстро. Правда, как и все в Symfony требует настройки.
+
+Про index мы уже говорили выше. Create и Update мы соеденяем простой фабрикой.
+
+```php
+ $model = $this->factory($id, 'Morfer');
+```
+
+Метод factory выглядит так:
+```php
+ protected function factory($id, $repo, $namespace = null)
+    {
+        /** @var BaseEntity $model */
+        if (!empty($id)) {
+            $model = $this->getDoctrine()->getRepository('Model:' . $repo)->find($id);
+        } else {
+            if (isset($namespace)) {
+                $repo = $namespace . $repo;
+                $model = new $repo();
+            } else {
+                $repo = 'Model\Entity\\' . $repo;
+                $model = new $repo();
+            }
+        }
+        return $model;
+    }
+    
+```
