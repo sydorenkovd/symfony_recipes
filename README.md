@@ -4,8 +4,19 @@
 * [Принцип работы symfony](#Принцип-работы-symfony)
 * [Многие ко многим](#many-to-many)
 * [Работа с базой через миграции](#Работа-с-базой-через-миграции)
-* [Fixtures and Repository](#Fixtures-and-Repository)
-* [Плагины для PhpStorm](#Плагины-для-PhpStorm)
+* [Fixtures and Repository](#fixtures-and-repository)
+* [Плагины для PhpStorm](#Плагины-для-phpstorm)
+* [ArrayCollection](#arraycollection)
+* [Сервисы](#Сервисы)
+* [Сервисы twig](#Сервисы-twig)
+* [macro в Symfony](#macro-в-symfony)
+* [Генерация сущностей из таблиц](#Генерация-сущностей-из-таблиц)
+* [MongoDb](#MongoDb)
+* [Быстрое создание таблиц HTML](#Быстрое-создание-таблиц )
+* [Сохранение нескольких изображений в symfony](#Сохранение-нескольких-изображений-в-symfony)
+* [Составные шаблоны](#Составные-шаблоны)
+* [Быстрое сохранение данных в Symfony](#Быстрое-сохранение-данных-в-symfony)
+* [Мультиязычность](#Мультиязычность)
 
 Принцип работы symfony
 ------------------------
@@ -87,7 +98,8 @@ $this->users = new ArrayCollection();
 
 которые откроют все возможности для быстрого доступа к методам и свойствам. А названия настолько понятны, что в документацию лезть не приходится.
 
-------
+ArrayCollection
+----------------
 
 При связях, Symfony возвращает объект **ArrayCollection** который имеет в себе множество методов. Например метод filter.
 ```php
@@ -97,7 +109,8 @@ return $note->getCreatedAt() > new \DateTime('-3 month');
 ```
 На этом примере мы фильтруем записи по определенному отрезку времени (последние три месяца). На этом магия ArrayCollection не заканчивается.
 
--------
+Сервисы
+---------
 
 Создавать сервисы в symfony очень просто. Создаем свой сервис в папке service. При необходимости мы можем добавлять уже существующие сервисы в помощь нашему. Используем **Dependency Injection** и передаем сервисы в конструктор, нужные для сервисов классы можно найти с помощью консольной команды php bin/console debug:container "имя сервиса". После чего регистрируем наш сервис в symfony в конфиге **services.yml**.
 Пример:
@@ -114,8 +127,8 @@ $transformer = $this->get('app.markdown_transformer');
 ```
 Наш сервис готов.
 
-
-------
+Сервисы twig
+-------------
 
 Также есть возможность написать сервис для шаблонизатора twig. Для этого создадим папку twig в AppBundle и создадим наше расширение, унаследуем его от **Twig_Extension**, и реализуем методы **getFilters()**
 ```php
@@ -142,8 +155,10 @@ return $this->markdownTransformer->parse($str);
 ```
 Использовав **dependencyInjection**. Кстати symfony творит чудеса, нам не нужно нигде создавать объект, мы все уже прописали в .yml массив arguments это и есть наш сервис который будет передан в качестве зависимости.
 
-------
-macro в Symfony.
+
+macro в Symfony
+-----------------
+
 
 Macro это нечто вроде include, только используешь twig и можно передавать параметры. Массивы, объекты, что угодно. В macro принимаем параметры, прописываем логику шаблона.
 Вот пример сложного **macro**:
@@ -164,17 +179,23 @@ Macro это нечто вроде include, только используешь 
                 <li class="checked active" id="LanguageTab_ru">
                     <a class="margin-custom" href="#Language_ru" data-toggle="tab" data-lang="ru">
                         <label class="icheckbox_minimal-blue">
-                            <div class="icheckbox_minimal-blue checked" aria-checked="false" aria-disabled="false" style="position: relative;">
-                                <input id="langs[ru]" type="checkbox" class="minimal languageCheckBox" autocomplete="off" data-lang="ru" checked="" name="langs[ru]"></div>
+                            <div class="icheckbox_minimal-blue checked" aria-checked="false" 
+                            aria-disabled="false" style="position: relative;">
+                                <input id="langs[ru]" type="checkbox" class="minimal languageCheckBox" 
+                                autocomplete="off" data-lang="ru" checked="" name="langs[ru]"></div>
                         </label>
-                        <i class="famfamfam-flag-ru"></i> Русский                </a>
+                        <i class="famfamfam-flag-ru"></i> Русский</a>
                 </li>
                 <li class="checked" id="LanguageTab_uk">
                     <a class="margin-custom" href="#Language_uk" data-toggle="tab" data-lang="uk">
                         <label class="icheckbox_minimal-blue">
-                            <div class="icheckbox_minimal-blue checked" aria-checked="false" aria-disabled="false" style="position: relative;"><input id="langs[uk]" type="checkbox" class="minimal languageCheckBox" autocomplete="off" data-lang="uk" checked="" name="langs[uk]"></div>
+                            <div class="icheckbox_minimal-blue checked" aria-checked="false"
+                            aria-disabled="false" style="position: relative;">
+                            <input id="langs[uk]" type="checkbox" 
+                            class="minimal languageCheckBox" autocomplete="off" 
+                            data-lang="uk" checked="" name="langs[uk]"></div>
                         </label>
-                        <i class="famfamfam-flag-ua"></i> Українська                </a>
+                        <i class="famfamfam-flag-ua"></i> Українська</a>
                 </li>
             </ul>
             <div class="tab-content">
@@ -182,14 +203,16 @@ Macro это нечто вроде include, только используешь 
                     <input type="hidden" ng-model="$formGet.langs.ru" ng-init-value="Русский">
                     <div class="form-group">
                         <label for="html">{{ label }}</label>
-                        <div ng-model="$formGet.{{ field }}.ru" text-angular="" ng-init="$formGet.{{ field }}.ru = '{{ value.ru|escape|raw }}'"></div>
+                        <div ng-model="$formGet.{{ field }}.ru" text-angular=""
+                        ng-init="$formGet.{{ field }}.ru = '{{ value.ru|escape|raw }}'"></div>
                     </div>
                 </div>
                 <div class="tab-pane " id="Language_uk">
                     <input type="hidden" ng-model="$formGet.langs.uk" ng-init-value="Українська">
                     <div class="form-group">
                         <label for="html">{{ label }}</label>
-                        <div ng-model="$formGet.{{ field }}.uk" text-angular="" ng-init="$formGet.{{ field }}.uk = '{{ value.uk|escape|raw }}'"></div>
+                        <div ng-model="$formGet.{{ field }}.uk" text-angular="" 
+                        ng-init="$formGet.{{ field }}.uk = '{{ value.uk|escape|raw }}'"></div>
                     </div>
                 </div>
             </div>
@@ -201,8 +224,9 @@ Macro это нечто вроде include, только используешь 
 К сожалению twig не поддерживает парсинг значений в шаблоне, как это умеет php, но зато мы более наглядно описываем, что нам нужно и также гибко можем это изменять.
 
 
+Генерация сущностей из таблиц
+------------------------------
 
------------
 Жутко раздражает создавать постоянно сущности в доктрине. Я ленивый хочу найти выход. И он есть. Можно их генерировать с базы данных.
 ```bash
 php bin/console doctrine:mapping:import --force AppBundle xml
@@ -221,8 +245,9 @@ php bin/console doctrine:mapping:import --force AppBundle xml
 
 Первая сгенерирует аннотации, вторая сами сущности. Если не хотите использовать аннотации ... используйте аннотации.
 
+MongoDb
+----------
 
-------
 MongoDb отличная система для хранения данных, и быстрой выборки. Давайте заиспользуем ее используя doctrine.
 Для начала нужно установить зависимости DoctrineMongoDBBundle. Есть дока расписывать не буду.
 Скажу только что загрузчик composer должен быть перед
@@ -242,7 +267,9 @@ namespace Acme\StoreBundle\Document;
 
 Также вы можете связать сущности mongo с mysql сущностями при помощи хитрых манипуляций. Некоторые не рекомендуют этого делать, однако это открывает огромное удобство и позволяет писать меньше кода. Мы же лентяи.
 
--------
+Быстрое создание таблиц 
+--------------------------
+
 Symfony великолепен. А мы лентяи. Я покажу как можно создать таблицу с данными при помощи всего "двух" строчек кода. Но это не точно.
 
 В итоге у нас выйдет:
@@ -387,9 +414,9 @@ Admin.directive('tableAdmin', ["$", "$compile", function($, $compile) {
 
 Согласен, что это не "две" строчки, и то что находится за сценой выглядит ненужной сложностью. Но это ускорит вашу работу по созданию таблиц несколько раз. Сделает быстрой открисовку, так как данные приходят ajax. А сторонние библиотеки сделают за вас монотонную работу не избавляя от гибкости их использования и кастомизации.
 
-
-------
-Сохранение нескольких изображений в symfony. Например удобно так работать с галереями.
+Сохранение нескольких изображений в symfony
+--------------------------------------------
+Например удобно так работать с галереями.
 На самом деле этот процес занимает довольно таки много времени и кода. Руководствуясь моим любимым принципом DRY я попробую минифицировать количество строк которое нам необходимо при сохранении нескольких изображении.
 
 Передавать изображения с клиента на сервер мы будем по средством base64 кода. Это удобно и просто.
@@ -447,10 +474,10 @@ $data = $this->getDataArrayFromRequest($request);
  
  Основная идея здесь, то php может парсить переменные как методы. Мы можем очень динамично работать с переменными и значит использовать один код много раз, меняя только регуляторы, которые в него передаем.
  
+ Составные шаблоны
+ ------------------
  
- --------
- Используем macro внутри macro. Составные шаблоны
-
+ Используем macro внутри macro.
 ```html
 
 {% macro header(model, backUrl) %}
@@ -469,9 +496,8 @@ $data = $this->getDataArrayFromRequest($request);
 
 Таким образом можно формировать постоянные элементы быстро и гибко.
 
-------------
-
 Быстрое сохранение данных в Symfony
+-------------------------------------
 
 Вас как и меня наверное раздражает писать много кода в Symfony. Он многих отталкивает своей так называемо монструозностью. Но это не так. Тот же самый CRUD на Symfony пишется очень легко, просто и быстро. Правда, как и все в Symfony требует настройки.
 
