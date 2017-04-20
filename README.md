@@ -492,3 +492,67 @@ $data = $this->getDataArrayFromRequest($request);
     }
     
 ```
+Но метод сохранения остается всегда самым большим.
+
+```php
+
+public function saveAction(Request $request) {
+        $data = $this->getDataArrayFromRequest($request);
+        $model = $this->factory($data['id'], 'Morfer');
+        $this->save($model->trustValues($data));
+        return new JsonResponse(['data' => $data]);
+    }
+    
+```
+Три строчки. Не оень то и много. На самом деле можно сократить до одной.
+
+```php
+
+public function trustValues($values) {
+        foreach ($values as $field => $val) {
+                $method = 'set' . ucfirst($field);
+                if(method_exists($this, $method)) {
+                    $this->$method($values[$field]);
+                }
+        }
+       return $this;
+    }
+    
+```
+
+Здесь мы создаем сеттеры для свойств которые к нам приходят. Да они должны строго именоватся, чтобы этот метод работал, но если это быстрое сохранение, и эту систему пишете вы, то это не составляет труда. Я ведь пишу, только идеи и примеры реализации, а не конечный вариант.
+
+В этой реализации можно также схитрить, или кастомизировать.
+И метод **values** будет такого вида:
+```php
+
+ public function values($values, $fields, $relationBindingModels = [])
+    {
+        foreach ($fields as $field) {
+            if (isset($values[$field])) {
+                $method = 'set' . ucfirst($field);
+                $this->$method($values[$field]);
+            }
+        }
+        if (count($relationBindingModels) > 0) {
+            foreach ($relationBindingModels as $name => $model) {
+                $method = 'set' . ucfirst($name);
+                $this->$method($model);
+            }
+        }
+        return $this;
+    }
+    
+```
+
+В итоге мы получаем гибкую настройку
+
+```php
+
+$model->values($data, 
+['active', 'h1', 'metaDescription', 'metaKeywords', 'metaTitle', 'text', 'title'], 
+['country' => $country]);
+
+```
+
+Сами задаем значения. Значения которые зранят идентификаторы связи между таблицами в doctrine так просто присвоить нельзя, по-этому мы передаем объект и как бы сохраняем связанную сущность. Это нужно дял целостности данных, чтобы вы не присвоили идентификатор не существующей сущности и не поламали связь.
