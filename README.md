@@ -624,4 +624,44 @@ $model->values($data,
     
 ```
 
+Наши сущности связаны, как только можно. Теперь можем приступить к построению структуры сохранения записей и получения как строк по локации, так и массивом для редактирования в админке.
+
+Первое, что мы делаем, это инициализируем базовую сущность Slide. Я использую фабрику из базового контроллера для того, чтобы не парится с новыми и уже существующими сущностями. Не люблю засорять контроллеры.
+
+```php
+
+ protected function factory($id, $repo, $namespace = null)
+    {
+        /** @var BaseEntity $model */
+        if (!empty($id)) {
+            $model = $this->getDoctrine()->getRepository('Model:' . $repo)->find($id);
+        } else {
+            if (isset($namespace)) {
+                $repo = $namespace . $repo;
+                $model = new $repo();
+                $model->setTranslate($repo . 'Translation');
+            } else {
+                $repo = 'Model\Entity\\' . $repo;
+                $model = new $repo();
+                $model->setTranslate($repo . 'Translation');
+                if (class_exists($model->getTranslate())) {
+                    $langs = Config::load('lang.short');
+                    $count = count($langs);
+                    for ($i = 0; $i < $count; $i++) {
+                        $translationModelName = $model->getTranslate();
+                        /** @var BaseEntity $translationModel */
+                        $translationModel = new $translationModelName();
+                        $translationModel->setLocale($langs[$i]);
+                        $model->addTranslationModel($translationModel);
+                    }
+                }
+            }
+        }
+        return $model;
+    }
+    
+```
+Если приходит id то мы возвращаем сущность. Если нет, то смотрим стандартен ли наш namespace. При сохранении новой сущности нам нужно определить является ли она Translatable, то есть имеет ли она поля ,которые нужны в нескольких языковых вариантах. Мы проверяем и записываем новые сущности с таблицы переводов в список. Они будут с нами до конца.
+
+
 
