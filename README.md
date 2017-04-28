@@ -598,3 +598,30 @@ $model->values($data,
 -------------------
 
 ![пример](https://github.com/sydorenkovd/symfony_recipes/blob/master/assets/trans.jpg "trans")
+
+Для того, чтобы связывать сущности добавим в SlideTranslation:
+
+```php
+    /**
+     * @ORM\ManyToOne(targetEntity="Model\Entity\Slide", inversedBy="tranlations")
+     * @ORM\JoinColumn(name="translatable_id", referencedColumnName="id")
+     */
+    private $transtable;
+
+```
+А в Slide:
+```php
+
+ /**
+     * @ORM\OneToMany(targetEntity="Model\Entity\SlideTranslation", mappedBy="transtable")
+     * @ORM\JoinColumn(name="id", referencedColumnName="translatable_id")
+     */
+    private $tranlations;
+
+    public function __construct() {
+        $this->tranlations = new ArrayCollection();
+    }
+    
+```
+
+
