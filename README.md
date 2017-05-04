@@ -693,7 +693,63 @@ $model->values($data,
     }
     
 ```
-Если приходит id то мы возвращаем сущность. Если нет, то смотрим стандартен ли наш namespace. При сохранении новой сущности нам нужно определить является ли она Translatable, то есть имеет ли она поля ,которые нужны в нескольких языковых вариантах. Мы проверяем и записываем новые сущности с таблицы переводов в список. Они будут с нами до конца.
+Если приходит id то мы возвращаем сущность. Если нет, то смотрим стандартен ли наш namespace. При сохранении новой сущности нам нужно определить является ли она Translatable, то есть имеет ли она поля ,которые нужны в нескольких языковых вариантах. Мы проверяем и записываем новые сущности с таблицы переводов в список. Они будут с нами до конца. Это симулирует связи.
 
+Когда мы маппаем обьект, наполняе его свойствами, то наши сеттеры не такие простые, а специальные. И работает общий метод.
 
+```php
+$this->setTranslation(__FUNCTION__, $value);
+```
 
+Который определен в базовой сущности, как:
+
+```php
+ public function setTranslation($functionName, $data)
+    {
+        try {
+            $translations = lcfirst(str_replace('set', '', $functionName)) . 'Translation';
+           if(isset($this->$translations)) {
+                   foreach ($this->$translations as $translation) {
+                       foreach ($data as $lang => $text) {
+                           if ($translation->getLocale() == $lang) {
+                               $translation->$functionName($text);
+                           }
+                       }
+                   }
+           } else {
+               foreach ($this->getTranslationModels() as $translation) {
+                   foreach ($data as $lang => $text) {
+                       if ($translation->getLocale() == $lang) {
+                           $translation->$functionName($text);
+                       }
+                   }
+               }
+
+           }
+
+        } catch (\Exception $e) {
+            throw new Exception($e->getMessage());
+        }
+    }
+
+```
+
+Мы идем по связям, строим имя сеттера, и благодаря специальном соглашении имен и возможностью php парсить переменные как угодно, мы получаем метод, который отрабатывает вне зависимости от сущности и метода. А если эта сущность новая, то мы обращаемся к нашей коллекции обьектов, которые мы описали ,при создании обьекта.
+
+И после того как у нас есть все нужные нам данные в обьектах мы выполняем.
+
+```php
+ $transTable = $entity->getTranslationModels();
+            $em->persist($entity);
+            $em->flush();
+            /** @var BaseEntity $model */
+            foreach ($transTable as $model) {
+               $em->persist($model);
+                $em->flush();
+                $model->setTranstable($entity);
+                $em->persist($model);
+                $em->flush();
+            }
+
+```
+Которое мы вызываем в случае новой сущности. Я пытался обойти двойной **flush** есть даже тема на stacloverflow, но эллегантного решения я пока не нашел. 
