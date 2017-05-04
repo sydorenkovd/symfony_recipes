@@ -173,51 +173,50 @@ Macro это нечто вроде include, только используешь 
 
 ```twig
 {% macro multilang(label, field, value) %}
-    <div class="box-body">
-        <div class="nav-tabs-custom">
-            <ul class="nav nav-tabs">
-                <li class="checked active" id="LanguageTab_ru">
-                    <a class="margin-custom" href="#Language_ru" data-toggle="tab" data-lang="ru">
-                        <label class="icheckbox_minimal-blue">
-                            <div class="icheckbox_minimal-blue checked" aria-checked="false" 
-                            aria-disabled="false" style="position: relative;">
-                                <input id="langs[ru]" type="checkbox" class="minimal languageCheckBox" 
-                                autocomplete="off" data-lang="ru" checked="" name="langs[ru]"></div>
-                        </label>
-                        <i class="famfamfam-flag-ru"></i> Русский</a>
-                </li>
-                <li class="checked" id="LanguageTab_uk">
-                    <a class="margin-custom" href="#Language_uk" data-toggle="tab" data-lang="uk">
-                        <label class="icheckbox_minimal-blue">
-                            <div class="icheckbox_minimal-blue checked" aria-checked="false"
-                            aria-disabled="false" style="position: relative;">
-                            <input id="langs[uk]" type="checkbox" 
-                            class="minimal languageCheckBox" autocomplete="off" 
-                            data-lang="uk" checked="" name="langs[uk]"></div>
-                        </label>
-                        <i class="famfamfam-flag-ua"></i> Українська</a>
-                </li>
-            </ul>
-            <div class="tab-content">
-                <div class="tab-pane active" id="Language_ru">
-                    <input type="hidden" ng-model="$formGet.langs.ru" ng-init-value="Русский">
-                    <div class="form-group">
-                        <label for="html">{{ label }}</label>
-                        <div ng-model="$formGet.{{ field }}.ru" text-angular=""
-                        ng-init="$formGet.{{ field }}.ru = '{{ value.ru|escape|raw }}'"></div>
-                    </div>
-                </div>
-                <div class="tab-pane " id="Language_uk">
-                    <input type="hidden" ng-model="$formGet.langs.uk" ng-init-value="Українська">
-                    <div class="form-group">
-                        <label for="html">{{ label }}</label>
-                        <div ng-model="$formGet.{{ field }}.uk" text-angular="" 
-                        ng-init="$formGet.{{ field }}.uk = '{{ value.uk|escape|raw }}'"></div>
-                    </div>
+  <div class="box-body">
+            <div class="nav-tabs-custom">
+                <ul class="nav nav-tabs">
+                    {% for lang in langs %}
+                            <li class="checked {% if lang == 'ru' %}active{% endif %}" id="LanguageTab_{{ lang }}">
+                                <a class="margin-custom" href="#Language_{{ lang }}"
+                                data-toggle="tab" data-lang="{{ lang }}">
+                                    <label class="icheckbox_minimal-blue">
+                                            <input id="langs[{{ lang }}]" type="checkbox" 
+                                            class="minimal languageCheckBox" autocomplete="off" 
+                                            data-lang="{{ lang }}" checked="" name="langs[{{ lang }}]">
+                                    </label><i class="famfamfam-flag-{{ lang }}"></i> Русский </a>
+                            </li>
+                        {% endfor %}
+                </ul>
+                <div class="tab-content">
+                    {% for lang in langs %}
+                        <input type="hidden" ng-model="$formGet.langs.{{ lang }}" 
+                        ng-init-value="{% if lang == 'ru' %}Русский{% else %}Украинский{% endif %}">
+                        <div class="tab-pane {% if lang == 'ru' %}active{% endif %}" id="Language_{{ lang }}">
+                            {% set i = 0 %}
+                            {% for field,type in fields %}
+                                <div class="form-group">
+                                    <label for="{{ field }}">{{ labels[i] }}</label>
+                                    {% if type == 'input' %}
+                                        <input class="form-control admin_input_string" type="text" 
+                                        name="{{ field }}" ng-model="$formGet.{{ field }}.{{ lang }}"
+                                        aria-invalid="false" ng-init-value="{{ value[i]|getValueByKey(lang)|raw }}">
+                                    {% endif %}
+                                    {% if type == 'text' %}
+                                        <div ng-model="$formGet.{{ field }}.{{ lang }}" text-angular="text-angular" 
+                                        name="{{ field }}[{{ lang }}]" 
+                                        ng-init="$formGet.{{ field }}.{{ lang }} = 
+                                        '{{ value[i]|getValueByKey(lang)|replace({"'":"&acute;"}) }}'">
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                {% set i = i + 1 %}
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
-    </div>
 {% endmacro %}
 ```
 Этот macro отрисовывает поля для редактирования текстов в двух языковых фарматах.
