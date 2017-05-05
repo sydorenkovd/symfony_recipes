@@ -26,7 +26,7 @@
 * Это не guide по **symfony**, и уж точно не лучшие практики, это мои наработки и идеи
 * Это не варианты для production, а лишь идеи реализаций, той или иной проблемы
 
-#### Надесь вы найдете для себя что почерпнуть и покритиковать. И самое главное, надесь, что это будет полезно.
+#### Надесь вы найдете для себя что почерпнуть и покритиковать. И самое главное, надеюсь, что это будет полезно.
 
 Принцип работы symfony
 ------------------------
@@ -640,6 +640,68 @@ $model->values($data,
 -------------------
 
 ![пример](https://github.com/sydorenkovd/symfony_recipes/blob/master/assets/trans.jpg "trans")
+
+Создаем таблицу переводов с помощью миграции.
+
+```php
+$migration->createTable($schema, 'landing_countries_translation', ['meta_title', 'meta_description', 'meta_keywords', 'html_text']);
+```
+И наш метод для создания подобных таблиц:
+
+```php
+    /**
+     * @param Schema $schema
+     * @param string $table Name of the new table
+     * @param array $translatableFields list of fields
+     */
+    public function createTable(Schema &$schema, $table, $translatableFields) {
+        if(!$schema->hasTable($table)) {
+            $mainTable = explode('_', $table)[0];
+            $tableNewSchema = $schema->createTable($table);
+            $tableNewSchema->addColumn('id', Type::INTEGER, [
+                'autoincrement' => true,
+            ]);
+            $tableNewSchema->setPrimaryKey(['id']);
+            $tableNewSchema->addColumn('translatable_id', Type::INTEGER, [
+                'notnull' => false
+            ]);
+            $tableNewSchema->addIndex(['translatable_id'], 'idx_'.$table);
+            foreach ($translatableFields as $translatableField) {
+                if (strpos($translatableField, '_text') !== false) {
+                    $translatableField = str_replace('_text', '', $translatableField);
+                    $tableNewSchema->addColumn($translatableField, Type::TEXT, [
+                        'notnull' => false
+                    ]);
+                } else {
+                    $tableNewSchema->addColumn($translatableField, Type::STRING, [
+                        'notnull' => false
+                    ]);
+                }
+            }
+            $tableNewSchema->addColumn('locale', Type::STRING, [
+                'length' => 2,
+                'notnull' => true
+            ]);
+        }
+    }
+```
+Можно написать еще методы по работе с миграциями в сервисе **Migration**, и если вам понадобятся в нем методы AbstractMigration класса, то можно передать таким образом. 
+
+```php
+        $dd = $this;
+        $func = function($query) use (&$dd) {
+            $dd->addSql($query);
+        };
+        $migration->writeInDataIntoTranslatable($schema, 'landing_countries_translation', ['meta_title', 'meta_description', 'meta_keywords', 'html'], $func);
+```
+И внутри метода **writeInDataIntoTranslatable** вызываем как
+
+```php
+$obj("INSERT INTO {$schema->getName()}.{$table} ( ...
+```
+
+Можно и через DI из конфигов сервисов, но так мне тоже нравится.
+
 
 Для того, чтобы связывать сущности добавим в SlideTranslation:
 
