@@ -83,33 +83,53 @@ Many to many
 ```php
 class User
 {
-/**
-* Many Users have Many Groups.
-* @ORM\ManyToMany(targetEntity="Group", inversedBy="users")
-* @ORM\JoinTable(name="roles_users")
-*/
-private $roles;
+  /**
+  * Many Users have Many Groups.
+  * @ORM\ManyToMany(targetEntity="Group", inversedBy="users")
+  * @ORM\JoinTable(name="roles_users")
+  */
+  private $roles;
 
-public function __construct() {
-$this->roles = new ArrayCollection();
-}
-============================
+  public function __construct() {
+    $this->roles = new ArrayCollection();
+  }
+
 class Role
 {
-/**
-* Many Roles have Many Users.
-* @ORM\ManyToMany(targetEntity="User", mappedBy="roles")
-*/
-private $users;
+  /**
+  * Many Roles have Many Users.
+  * @ORM\ManyToMany(targetEntity="User", mappedBy="roles")
+  */
+  private $users;
 
-public function __construct() {
-$this->users = new ArrayCollection();
-}
+  public function __construct() {
+    $this->users = new ArrayCollection();
+  }
 ```
 Использование:
 ```php
 <li><a>Количество ролей <span class="pull-right badge bg-blue">{{ user.roles.count }}</span></a></li>
 ```
+Обновление:
+
+```php
+$isNotChanged = ($roles == $userRoles);
+       if(!$isNotChanged ) {
+           if ( !empty($requestResultArr['id'])) {
+               $this->getDoctrine()->getRepository('Model:RoleUser')->clearRoles($user->getId());
+           }
+           foreach ($roles as $role) {
+               $roleModel = $em->getRepository('Model:Role')->findOneBy(['name' => $role]);
+               $user->addRole($roleModel);
+               $em->persist($roleModel);
+           }
+       }
+        $em->persist($user);
+        $em->flush();
+```
+Сначало смотрим не изменились ли значения, зачем лишний раз дергать базу.
+
+
 Считаем количество ролей конкретного пользователя. Roles мы получаем **Persistentcollection** которая имеет методы стандартного итератора и методы для работы с коллекциями, в общем все что душе угодно, любые манипуляции.
 
 Плагины для PhpStorm
