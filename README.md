@@ -849,8 +849,6 @@ $this->setTranslation(__FUNCTION__, $value);
             $em->flush();
             /** @var BaseEntity $model */
             foreach ($transTable as $model) {
-               $em->persist($model);
-                $em->flush();
                 $model->setTranstable($entity);
                 $em->persist($model);
                 $em->flush();
