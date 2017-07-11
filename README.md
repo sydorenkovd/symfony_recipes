@@ -1148,18 +1148,69 @@ if($this->passwordEncoder->isPasswordValid($user, $password)) {
        }
 ```
 
+------------------------------
+
+***Роли
+
+Роли сохраняем как 
+```php
+  /**
+    * @ORM\Column(type="json_array")
+    */
+    private $roles = [];
+    .......
+    
+$roles = $this->roles;
+        if(!in_array('ROLE_USER', $roles)) {
+             $roles[] = 'ROLE_USER';
+        }
+        return $roles;
+```
+
+И проверяем в контроллере
+```
+* @Security("is_granted('ROLE_USERS')")
+```
 
 Сделать блокировку на отдельную часть:
 
+```yml
 access_control:
 - { path: ^/admin, roles: IS_AUTHENTICATED_FULLY }
+```
+У вас при успешном входе в систему будет доступен пользователь
+
+```
+{{ app.user.username }}
+
+$this->getUser()->getUsername()
+```
+
+Можно также строить дерево роле, иерархию.
+
+```
+role_hierarchy:
+        ROLE_ADMIN: [ROLE_MANAGE_ITEMS, ROLE_ALLOWED_TO_SWITCH]
+```
+Таким образом админу доступно управлять записями и также смотреть страницы от другого пользователя
+об этом вы можете почитать в [документации](https://symfony.com/doc/current/security/impersonating_user.html)
 
 
+Также полезная вещь, что вы можете создать форму регистрации и после успеха сразу логинится под только что зарегистрированным пользователем
+
+```php
+ return $this->get('security.authentication.guard_handler')->authenticateUserAndHandleSuccess(
+              $user,
+              $request,
+              $this->get('app.security.login_form_authenticator'),
+              'main'
+            );
+```
 
 В процессе логирования происходят ридеректы, и чтобы они не выглядели страшно, работает сервис redirect_listener
 он перехватывает 301-й редирект и выводит кастомный шаблон.
 
+
+
 При запросах работает сервис request_listener который проверяет имеет ли пользователь со своими правами доступ к запрашиваемой странице.
 
-Права пользователя сейчас хранятся в roles в таблице users, также и в старом представлении ManyToMany Relations.
-Чтобы на проде можно было смигрировать данные.
