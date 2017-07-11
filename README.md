@@ -862,6 +862,7 @@ $this->setTranslation(__FUNCTION__, $value);
 
 Ход работы:
 Реализуем полную авторизацию и регистрацию с нуля с помощью Doctrine.
+
 В [репозитории](https://github.com/sydorenkovd/symfony_app) 28/29 июня 2017 и немного раньше, есть реализация по коммитам.
 
 Для начала нужно создать сущность User и реализовать UserInterface
@@ -1016,6 +1017,38 @@ app.security.login_form_auth:
                     - app.security.login_form_authenticator
                    
 ```
+также добавляем провайдер
+```
+providers:
+        our_users:
+            entity: { class: AppBundle\Entity\User, property: email }
+          
+```
+
+Чтобы в случае неверного пароля сохранялся наш username добавим запись в сессию в методе getCredentials
+
+```php
+$request->getSession()->set(
+            Security::LAST_USERNAME, $data['_username']
+        );
+```
+И так у нас есть Login, нужен и logout. В Doctrine это очень просто.
+
+В основном фаерволе прописываем security.yml
+
+```
+$request->getSession()->set(
+            Security::LAST_USERNAME, $data['_username']
+        );
+```
+И в SecurityController дулаем метод logoutAction, в нем лучше бросить какой-нибудь exceprion
+
+```php
+throw new \Exception('this should not be reached');
+```
+потому что этот метод не должен отрабатывать.
+
+
 
 Сделать блокировку на отдельную часть:
 
