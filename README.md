@@ -1210,7 +1210,93 @@ role_hierarchy:
 В процессе логирования происходят ридеректы, и чтобы они не выглядели страшно, работает сервис redirect_listener
 он перехватывает 301-й редирект и выводит кастомный шаблон.
 
+```php
+namespace Admin\Doctrine;
 
+use Symfony\Component\Templating\EngineInterface;
+use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+
+class RedirectListener
+{
+    protected $templating;
+
+    public function __construct(EngineInterface $templating)
+    {
+        $this->templating = $templating;
+    }
+
+    public function onKernelResponse(FilterResponseEvent $event)
+    {
+        $response = $event->getResponse();
+
+        if (!($response instanceof RedirectResponse)) {
+            return;
+        }
+
+        $uri  = $response->getTargetUrl();
+        $html = $this->templating->render(
+            '301.html.twig',
+            array('uri' => $uri)
+        );
+
+        $response->setContent($html);
+    }
+}
+
+```
+
+Регистрируем
+```
+app.redirect_listener:
+        class: Admin\Doctrine\RedirectListener
+        arguments: [ '@templating' ]
+        tags:
+             - { name: kernel.event_listener, event: kernel.response, method: onKernelResponse }
+
+```
 
 При запросах работает сервис request_listener который проверяет имеет ли пользователь со своими правами доступ к запрашиваемой странице.
 
+```php
+namespace Admin\Doctrine;
+
+
+use Doctrine\ORM\EntityManager;
+use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+use Symfony\Component\HttpKernel\HttpKernel;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
+
+class RequestListener
+{
+    private $em;
+    private $token;
+    public function __construct(EntityManager $em, TokenStorage $token)
+    {
+        $this->em = $em;
+        $this->token = $token;
+    }
+
+    public function onKernelRequest(GetResponseEvent $event)
+    {
+        if (strpos($event->getRequest()->getUri(), '/admin') !== false) {
+// some actions
+        } else {
+            return;
+        }
+    }
+}
+
+```
+
+Регистрируем как 
+
+```
+app.request_listener:
+        class: Admin\Doctrine\RequestListener
+        arguments: ['@doctrine.orm.entity_manager', '@security.token_storage']
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+
+```
