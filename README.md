@@ -1037,17 +1037,116 @@ $request->getSession()->set(
 В основном фаерволе прописываем security.yml
 
 ```
-$request->getSession()->set(
-            Security::LAST_USERNAME, $data['_username']
-        );
+ logout:
+        path: /logout
 ```
-И в SecurityController дулаем метод logoutAction, в нем лучше бросить какой-нибудь exceprion
+И в SecurityController делаем метод logoutAction, в нем лучше бросить какой-нибудь exception
 
 ```php
 throw new \Exception('this should not be reached');
 ```
 потому что этот метод не должен отрабатывать.
 
+-------------------------
+
+Дальше нам нужно порабоать над паролем.
+Добавим новое поле в User plainPassword, он будет служить как помощник, хранилище, и в базу само собой писать его не нужно. Или где-либо сохранять.
+
+
+```php
+public function setPlainPassword($plainPassword)
+     {
+         $this->plainPassword = $plainPassword;
+         $this->password = null;
+     }
+     
+     public function eraseCredentials()
+      {
+        $this->plainPassword = null;
+      }
+     
+```
+
+При создании новых пользователей работает hash_password_listener этот сервис кодирует пароль и сохраняет его.
+
+```php
+namespace AppBundle\Doctrine;
+
+
+use AppBundle\Entity\User;
+use Doctrine\Common\EventSubscriber;
+use Doctrine\ORM\Event\LifecycleEventArgs;
+use Symfony\Component\Security\Core\Encoder\UserPasswordEncoder;
+
+class HashPasswordListener implements EventSubscriber
+{
+
+    /**
+     * @var UserPasswordEncoder
+     */
+    private $passwordEncoder;
+
+    public function __construct(UserPasswordEncoder $passwordEncoder)
+    {
+        $this->passwordEncoder = $passwordEncoder;
+    }
+
+    public function prePersist(LifecycleEventArgs $args) {
+        $entity = $args->getEntity();
+        if(!$entity instanceof User) {
+            return;
+        }
+      $this->encodePassword($entity);
+    }
+    public function preUpdate(LifecycleEventArgs $args) {
+        $entity = $args->getEntity();
+        if(!$entity instanceof User) {
+            return;
+        }
+        $this->encodePassword($entity);
+        $em = $args->getEntityManager();
+        $meta = $em->getClassMetadata(get_class($entity));
+        $em->getUnitOfWork()->recomputeSingleEntityChangeSet($meta, $entity);
+    }
+
+    public function getSubscribedEvents()
+    {
+        return ['prePersist', 'preUpdate'];
+    }
+
+    /**
+     * @param User $entity
+     */
+    private function encodePassword(User $entity) {
+        $encoded = $this->passwordEncoder->encodePassword($entity, $entity->getPlainPassword());
+        $entity->setPassword($encoded);
+    }
+}
+```
+Регистрируем сервис в services.yml
+```
+ app.doctrine.hash_password_listener:
+      class: AppBundle\Doctrine\HashPasswordListener
+      autowire: true
+      tags:
+          - { name: doctrine.event_subscriber } 
+```
+Добавляем способ шифрования
+
+```
+encoders:
+        AppBundle\Entity\User: bcrypt
+```
+И меняем проверку пароля в checkCredentials
+добавляем с помощью DI сервис кодирования паролей
+
+```php
+use Symfony\Component\Security\Core\Encoder\UserPasswordEncoder
+
+if($this->passwordEncoder->isPasswordValid($user, $password)) {
+           return true;
+       }
+```
 
 
 Сделать блокировку на отдельную часть:
@@ -1056,11 +1155,6 @@ access_control:
 - { path: ^/admin, roles: IS_AUTHENTICATED_FULLY }
 
 
-
-При вводе логина и пароля (plainPassword) метод checkCredentials проверяет пользователя и пароль. 
-В случае ошибки сохраняет в сессию логин, и запрашивает пароль повторно.
-
-При создании новых пользователей работает hash_password_listener этот сервис кодирует пароль и сохраняет его.
 
 В процессе логирования происходят ридеректы, и чтобы они не выглядели страшно, работает сервис redirect_listener
 он перехватывает 301-й редирект и выводит кастомный шаблон.
