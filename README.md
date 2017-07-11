@@ -862,6 +862,7 @@ $this->setTranslation(__FUNCTION__, $value);
 
 Ход работы:
 Реализуем полную авторизацию и регистрацию с нуля с помощью Doctrine.
+В [репозитории](https://github.com/sydorenkovd/symfony_app) 28/29 июня 2017 и немного раньше, есть реализация по коммитам.
 
 Для начала нужно создать сущность User и реализовать UserInterface
 Реализовываем методы интерфейса.
@@ -911,7 +912,7 @@ $this->setTranslation(__FUNCTION__, $value);
 ```
 Чтобы удобно отслеживать ошибки и события установите 
 ```yml
-intercept_redirects: false
+intercept_redirects: true
 ```
 в config_dev.yml
 
@@ -996,6 +997,24 @@ class LoginFormAuthenticator extends AbstractFormLoginAuthenticator
 
 
  }
+```
+На данном этапе все просто, и мы используем очень простые провеки, а вместо пароля строку. Но в дальнейшем мы реализуем механизм шифрования.
+
+Также нужно зарегистрировать наш сервис
+```
+app.security.login_form_auth:
+       class: AppBundle\Security\LoginFormAuthenticator
+       autowire: true
+```
+И прописать его в security.yml
+
+```
+ main:
+            anonymous: ~
+            guard:
+                authenticators:
+                    - app.security.login_form_authenticator
+                   
 ```
 
 Сделать блокировку на отдельную часть:
