@@ -864,15 +864,146 @@ $this->setTranslation(__FUNCTION__, $value);
 Реализуем полную авторизацию и регистрацию с нуля с помощью Doctrine.
 
 Для начала нужно создать сущность User и реализовать UserInterface
+Реализовываем методы интерфейса.
+
+Создаем SecurityController и http метод login
+
+```php
+/**
+     * @Route("/login", name="login")
+     */
+    public function loginAction() {
+        $authenticationUtils = $this->get('security.authentication_utils');
+
+        // get the login error if there is one
+        $error = $authenticationUtils->getLastAuthenticationError();
+
+        // last username entered by the user
+        $lastUsername = $authenticationUtils->getLastUsername();
+
+        $form = $this->createForm(LoginForm::class, [
+            '_username' => $lastUsername
+        ]);
+        return $this->render('security/login.html.twig', array(
+            'form' => $form->createView(),
+            'error'         => $error,
+        ));
+    }
+```
+
+К нему view
+```html
+ <div class="container">
+        <div class="row">
+            <div class="col-xs-12">
+                {% if error %}
+                    <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+                {% endif %}
+                {{ form_start(form) }}
+                {{ form_row(form._username) }}
+                {{ form_row(form._password) }}
+                <button type="submit" class="btn btn-success">Login <span class="fa fa-lock"></span></button>
+                <a href="{{ path('user_register') }}">Register</a>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+```
+Чтобы удобно отслеживать ошибки и события установите 
+```yml
+intercept_redirects: false
+```
+в config_dev.yml
+
+---------------------------
+
+Теперь создаем сервис login_form_authenticator в котором и происходит все взаимодействие с doctrine
+
+```php
+namespace AppBundle\Security;
 
 
+use AppBundle\FormType\LoginForm;
+use Doctrine\ORM\EntityManager;
+use Symfony\Component\Form\FormFactoryInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\RouterInterface;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\UserProviderInterface;
+use Symfony\Component\Security\Guard\Authenticator\AbstractFormLoginAuthenticator;
+
+class LoginFormAuthenticator extends AbstractFormLoginAuthenticator
+{
+
+    /**
+     * @var FormFactoryInterface
+     */
+    private $formFactory;
+    /**
+     * @var EntityManager
+     */
+    private $em;
+    /**
+     * @var RouterInterface
+     */
+    private $router;
+
+    public function __construct(FormFactoryInterface $formFactory, EntityManager $entityManager, RouterInterface $router)
+     {
+
+         $this->formFactory = $formFactory;
+         $this->em = $entityManager;
+         $this->router = $router;
+     }
+
+    public function getCredentials(Request $request)
+     {
+            $isLoginSubmit = $request->getPathInfo() == '/login' && $request->isMethod('POST');
+            if (!$isLoginSubmit) {
+                    return null;
+         }
+         $form = $this->formFactory->create(LoginForm::class);
+         $form->handleRequest($request);
+         $data = $form->getData();
+         return $data;
+
+     }
+
+     public function getUser($credentials, UserProviderInterface $userProvider)
+     {
+            $username = $credentials['_username'];
+            return $this->em->getRepository('AppBundle:User')->findOneBy(['email' => $username]);
+     }
+
+     public function checkCredentials($credentials, UserInterface $user)
+     {
+           $password = $credentials['_password'];
+
+           if($password == 'ilike') {
+                   return true;
+        }
+        return false;
+     }
+
+     protected function getLoginUrl()
+     {
+            return $this->router->generate('login');
+     }
+     protected function getDefaultSuccessRedirectUrl() {
+            $this->router->generate('genus_notes');
+        }
+
+
+ }
+```
 
 Сделать блокировку на отдельную часть:
 
 access_control:
 - { path: ^/admin, roles: IS_AUTHENTICATED_FULLY }
 
-Есть сервис login_form_authenticator в котором и происходит все взаимодействие с doctrine
+
 
 При вводе логина и пароля (plainPassword) метод checkCredentials проверяет пользователя и пароль. 
 В случае ошибки сохраняет в сессию логин, и запрашивает пароль повторно.
