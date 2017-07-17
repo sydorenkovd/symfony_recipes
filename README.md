@@ -521,7 +521,7 @@ Admin.directive('tableAdmin', ["$", "$compile", function($, $compile) {
 ```php
 $data = $this->getDataArrayFromRequest($request);
         if (isset($data['image'])) {
-            $this->saveImages('Model\Entity\OfficeImage', $data['image'], 'Office', $data['id']);
+            $this->saveImages(OfficeImage::class, $data['image'], Office::class, $data['id']);
         }
 ```
 
@@ -546,9 +546,9 @@ $data = $this->getDataArrayFromRequest($request);
                 if($saved) { $this->save(new Image()); }
                 $model = new $modelName();
                 $imageModel = $this->getDoctrine()->getRepository('Model:Image')->find($imageId);
-                $mainModel = $this->getDoctrine()->getRepository('Model:'.$mainModelName)->find($mainModelId);
+                $mainModel = $this->getDoctrine()->getRepository($mainModelName)->find($mainModelId);
                 $model->setImage($imageModel);
-                $key = 'set' . $mainModelName;
+                $key = 'set' . substr(strrchr($mainModelName, '/'), 1);
                 $model->$key($mainModel);
                 $this->save($model);
             }
