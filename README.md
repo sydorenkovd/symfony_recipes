@@ -599,25 +599,21 @@ $data = $this->getDataArrayFromRequest($request);
 Про index мы уже говорили выше. Create и Update мы соеденяем простой фабрикой.
 
 ```php
- $model = $this->factory($id, 'Morfer');
+ $model = $this->factory($id, Morfer::class);
 ```
 
 Метод factory выглядит так:
 ```php
- protected function factory($id, $repo, $namespace = null)
+ protected function factory($id, $repo)
     {
         /** @var BaseEntity $model */
         if (!empty($id)) {
-            $model = $this->getDoctrine()->getRepository('Model:' . $repo)->find($id);
+            $model = $this->getDoctrine()->getRepository($repo)->find($id);
         } else {
-            if (isset($namespace)) {
-                $repo = $namespace . $repo;
-                $model = new $repo();
-            } else {
-                $repo = 'Model\Entity\\' . $repo;
-                $model = new $repo();
-            }
+            $model = new $repo();
         }
+      //  Also can be used in more elegant way
+      //  $model = empty($id) ? new $repo() : $this->getDoctrine()->getRepository($repo)->find($id);
         return $model;
     }
     
@@ -628,13 +624,13 @@ $data = $this->getDataArrayFromRequest($request);
 
 public function saveAction(Request $request) {
         $data = $this->getDataArrayFromRequest($request);
-        $model = $this->factory($data['id'], 'Morfer');
+        $model = $this->factory($data['id'], Morfer::class);
         $this->save($model->trustValues($data));
         return new JsonResponse(['data' => $data]);
     }
     
 ```
-Три строчки. Не оень то и много. На самом деле можно сократить до одной.
+Три строчки. Не очень то и много. На самом деле можно сократить до одной.
 
 ```php
 
@@ -685,7 +681,7 @@ $model->values($data,
 
 ```
 
-Сами задаем значения. Значения которые зранят идентификаторы связи между таблицами в doctrine так просто присвоить нельзя, по-этому мы передаем объект и как бы сохраняем связанную сущность. Это нужно дял целостности данных, чтобы вы не присвоили идентификатор не существующей сущности и не поламали связь.
+Сами задаем значения. Значения которые зранят идентификаторы связи между таблицами в doctrine так просто присвоить нельзя, по-этому мы передаем объект и как бы сохраняем связанную сущность. Это нужно для целостности данных, чтобы вы не присвоили идентификатор не существующей сущности и не поламали связь.
 
 
 
