@@ -71,7 +71,26 @@ doctrine:migrations:migrate.
 Fixtures and Repository
 -------------------------
 Для создании ложных данных в symfony используются **fixtures** и лучше использовать >**nelmio/alice**, написанную видимо **saldaek**, и использующая faker. Очень удобно и подробная документация. 
+
 Также в symfony очень просто можно создать свои запросы, для этого нужно создать репозиторий под нужную сущность и добавить туда кастомный сложный запрос, хорошо его описав, используя query builder.
+
+```php
+public function deleteAllTransportsByCountry($countryId) {
+        return $this->createQueryBuilder('countryTransport')
+            ->delete('Model:CountryTransport', 's')
+            ->where('s.countryId = :countryId')
+            ->setParameter('countryId', $countryId)
+            ->getQuery()
+            ->execute();
+    }
+```
+
+И после вызываем как 
+
+```php
+$em->getRepository('Model:CountryTransport')->deleteAllTransportsByCountry($country->getId());
+```
+Также мы можем обрабатывать данные из базы в репозиториях и делать разного рода выборки, но не рекомендуется слишком засорять репозитории без надобности. И поверьте, это сделать очень легко.
 
 -----
 
