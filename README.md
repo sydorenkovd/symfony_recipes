@@ -1320,7 +1320,7 @@ app.request_listener:
 
 ```
 
-Рецепты для PHP
+Рецепты для PHP/Javascript
 -----------------
 
 ### Расчет длины маршрута перелотов с учетом часовых поясов.
@@ -1328,3 +1328,13 @@ app.request_listener:
 У нас есть дата отправления и дата прибытия например (2017-08-11 12:00 с Киева) и (2017-08-11 15:00 в Вашингтон) по виду три часа лету, на самом деле 9 часов.
 
 Для того, чтобы по датам определять длительность перелета, нам нужно две даты и временную зону аэрапорта вылета. Все данные. Временная зона в формате "Europe/Kiev". В простой реализации всего этого нам поможет [moment.js](https://momentjs.com/)
+
+```javascript
+
+            var fromTime = moment.tz(checkTimestampOnValid(fromTimestamp), timezone).format('HH:mm');
+            var toTime = moment.tz(checkTimestampOnValid(toTimestamp), timezone).format('HH:mm');
+            var duration = moment.utc(moment(toTime, "HH:mm").diff(moment(fromTime, "HH:mm"))).format("HH:mm");
+
+```
+Чтобы работать с timezone нужно подключить [данные для moment.js](https://momentjs.com/downloads/moment-timezone-with-data.js). 
+
