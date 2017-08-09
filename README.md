@@ -1337,4 +1337,18 @@ app.request_listener:
 
 ```
 Чтобы работать с timezone нужно подключить [данные для moment.js](https://momentjs.com/downloads/moment-timezone-with-data.js). 
+Получаем время вылета, после чего время прилета рассчитываем относительно временной зоны вылета. После чего просим **moment.js** расчитать разницу для точности.
+
+```javascript
+var durationArr = duration.split(':');
+            if (durationArr[0].charAt(0) == '0') {
+                durationArr[0] = durationArr[0].substr(1);
+            }
+            var textReturn = '';
+            if (durationArr[0] != '0') {
+                textReturn += durationArr[0] + " " + ___("ч") + ". ";
+            }
+            return textReturn + durationArr[1] + " " + ___("мин") + '.';
+```
+После можем превратить строку ("9:20") в удобочитаемую **9 ч. 20 мин.** и подогнать под несколько локаций.
 
