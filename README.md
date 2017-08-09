@@ -1352,3 +1352,52 @@ app.request_listener:
 ```
 После можем превратить строку ("9:20") в удобочитаемую **9 ч. 20 мин.** и подогнать под несколько локаций.
 
+Сделать текст многоязычным просто. 
+
+```javascript
+if(typeof thisLang == 'undefined') {
+    thisLang = 'ru';
+}
+function ___(text, replace) {
+    if(thisLang == 'ru') {
+        return text;
+    } else if(labelsTwo.hasOwnProperty(text)) {
+        if(typeof replace !== 'undefined') {
+            var returnText = labelsTwo[text].clone();
+            for (var keyFind in replace) {
+                returnText = returnText.replace(keyFind, replace[keyFind]);
+            }
+            return returnText;
+        } else {
+            return labelsTwo[text];
+        }
+    } else {
+        return text;
+    }
+}
+```
+Язык инициализируется
+
+```javascript
+thisLang = document.getElementsByTagName('html')[0].getAttribute('lang');
+```
+
+А ***labelsTwo** это объект с вариациями.
+```javascript
+labelsTwo = {
+    'Вылет': 'Виліт',
+    ... ...
+    }
+    
+```
+Также можно сделать несколько языков при необходимости
+
+```javascript
+var labels = {
+    'ru': {
+        'from': 'Вылет',
+        ... ...
+        }
+     'uk': {...}
+```
+Немного изменив метод **___()** также можно получать данные. Все просто.
