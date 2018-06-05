@@ -19,6 +19,7 @@
 * [Быстрое сохранение данных в Symfony](#Быстрое-сохранение-данных-в-symfony)
 * [Мультиязычность](#Мультиязычность)
 * [Аутентификация](#Аутентификация)
+* [Тестирование](#Тестирование)
 
 P.S.
 ---------------------
@@ -1319,6 +1320,87 @@ app.request_listener:
             - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
 
 ```
+
+Тестирование
+--------------
+В Symfony 4.1 появилась нативаня возможность тестировать приватные сервисы, с поощью специального контейнера 
+```php
+        $client = static::createClient();
+        $container = $client->getContainer();
+       
+       // или альтернативный способ
+        $container = self::$container;
+```
+
+Тестирование API:
+Наследуем WebTestCase, который нам позволит иметь нативный клиент для запросов в тестовом окружении. Но мне больше нравиться guzzle по этому я в основном ставлю его.
+
+```php
+public function setUp()
+    {
+        $this->guzzle = new Client(
+            [
+                'base_uri' => self::$container->getParameter('uri'),
+                'verify'   => false
+            ]
+        );
+    }
+```
+Также для тестирования приватных методов вам наверняка понадобиться такая конструкция.
+```php
+ protected function invokeMethod(string $methodName, array $data)
+    {
+        $reflection = new \ReflectionClass(get_class($this->util));
+        $method = $reflection->getMethod($methodName);
+        $method->setAccessible(true);
+
+        return $method->invokeArgs($this->util, $data);
+    }
+```
+
+С помощью рефлексии можно сделать метод доступным и вызвать его.
+
+```php
+public function tearDown()
+    {
+        gc_collect_cycles();
+    }
+```
+
+После выполнения тестов запустить сборщик мусора, чтобы устранить циклические ссылки.  [Подробнее](http://php.net/manual/en/features.gc.collecting-cycles.php)
+
+Также для начала тестирования вам необходимы знания phpUnit в частности очень полезные вещи как:
+
+```php
+    /**
+     * @covers ManagerVoipController::login()
+     */
+```
+Что позволит соеденить тест и end-point который он тестирует. И 
+
+```php
+    /**
+     * @depends testActiveDepends
+     */
+```
+позволит сделать зависимости между тестами. Например создаете ложные записи, после возвращаете Id и проверяете все необходиомое, после прохождения удаляете. Помогает более явно тестировать систему, при этом сохраняя правильность данных даже девовской среды.
+
+Все конфиги окружения для тестирования храняться в **phpunit.xml**
+
+```xml
+  <php>
+        <ini name="error_reporting" value="-1" />
+        <env name="KERNEL_CLASS" value="App\Kernel" />
+        <env name="APP_ENV" value="test" />
+        <env name="APP_DEBUG" value="1" />
+        <env name="APP_SECRET" value="secret" />
+        <env name="SHELL_VERBOSITY" value="-1" />
+        <env name="APP_URI" value="http://0.0.0.0:8000/" />
+        ...
+    </php>
+```
+Также есть еще другие рекомендации и синтаксис, но с этим проще уже ознакамливатся по задачам с помощью официальных доков.
+
 
 Рецепты для PHP/Javascript
 -----------------
