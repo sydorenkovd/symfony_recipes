@@ -25,6 +25,7 @@
 P.S.
 ---------------------
 * [Рецепты для PHP/Javascript](#Рецепты-для-phpjavascript)
+* [FAQ](#Вопрос-ответ)
 
 Предисловие
 ============
@@ -1523,3 +1524,8 @@ $output = isset($input['key']) ?: isset($input['name']) ? 'yes' : 'no';
 var_dump($output); // yes
 
 ```
+
+FAQ (вопрос -> ответ)
+----------------------
+
+
